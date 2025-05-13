@@ -5,6 +5,6 @@ metadata:
   namespace: canteen-app
 data:
   # The API URL should be your ingress hostname without the /api path
-  api_url: http://localhost:30691
+  api_url: http://localhost:30001
   # Replace APP_HOSTNAME with the hostname you'll use for your application
   app_hostname: APP_HOSTNAME

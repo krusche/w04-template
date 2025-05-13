@@ -15,7 +15,7 @@ COPY src ./src
 RUN gradle bootJar --no-daemon
 
 # Stage 2: Run the application
-FROM eclipse-temurin:21-jre
+FROM gcr.io/distroless/java21-debian12
 
 WORKDIR /app
 
@@ -26,4 +26,4 @@ COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
 
 # Command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["app.jar"]

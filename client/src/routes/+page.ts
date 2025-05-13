@@ -1,6 +1,7 @@
 import type { PageLoad } from './$types';
 import { env } from '$env/dynamic/public';
 
+export const ssr = false;
 
 let baseUrl = env.PUBLIC_API_URL || "http://localhost:8080";
 

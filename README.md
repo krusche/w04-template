@@ -106,19 +106,72 @@ The project includes Docker configurations for containerized deployment.
 
 1. Build and start the services:
    ```bash
-   docker-compose up --build
+   docker compose up --build
    ```
 2. Access the application:
    - Client: [http://localhost:3000](http://localhost:3000)
    - Server: [http://localhost:8080](http://localhost:8080)
 
-### Production Deployment
+## Kubernetes Deployment
 
-Use the `docker-compose.prod.yml` file for production deployment. Ensure environment variables are set correctly.
+This project can be deployed to a Kubernetes cluster. The Kubernetes configuration files are located in the `k8s` directory.
 
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
+### Ensure Docker Desktop Kubernetes is Active
+
+Before deploying, make sure you're using Docker Desktop's Kubernetes:
+
+1. Verify that Kubernetes is enabled in Docker Desktop:
+   - Open Docker Desktop
+   - Go to Settings/Preferences
+   - Select "Kubernetes" from the left menu
+   - Check "Enable Kubernetes"
+   - Click "Apply & Restart" if needed
+
+2. Confirm Docker Desktop is your current kubectl context:
+   ```bash
+   kubectl config current-context
+   ```
+   This should return `docker-desktop` or similar.
+
+3. If needed, switch to Docker Desktop context:
+   ```bash
+   kubectl config use-context docker-desktop
+   ```
+
+### Deploy to Local Kubernetes
+
+Follow these steps to deploy the application correctly:
+
+1. Create the namespace and deploy all resources at once:
+   ```bash
+   kubectl apply -f k8s/namespace.yaml
+   kubectl apply -f k8s
+   ```
+
+2. Check the status of all deployed resources:
+   ```bash
+   kubectl -n canteen-app get all
+   ```
+
+3. Verify services are running with the correct ports:
+   ```bash
+   kubectl -n canteen-app get service
+   ```
+   You should see the client service using NodePort 30000 and the server service using NodePort 30001.
+
+4. Wait for all pods to be in the running state:
+   ```bash
+   kubectl -n canteen-app get pods
+   ```
+
+### Accessing the Application
+
+After successful deployment, you can access:
+
+- The client application at: http://localhost:30000
+- The server API directly at: http://localhost:30001
+
+The client is already configured to communicate with the server through the fixed NodePort 30001 as defined in the ConfigMap.
 
 ## CI/CD Pipeline
 
@@ -139,8 +192,7 @@ The project includes GitHub Actions workflows for:
 │   ├── build.gradle         # Gradle build file
 │   └── Dockerfile           # Server Dockerfile
 │
-├── docker-compose.yml       # Docker Compose for local development
-├── docker-compose.prod.yml  # Docker Compose for production
+├── compose.yml       # Docker Compose for local development
 └── .github/workflows/       # CI/CD workflows
 ```
 
