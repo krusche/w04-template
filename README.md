@@ -192,7 +192,15 @@ The project includes GitHub Actions workflows for:
 │   ├── build.gradle         # Gradle build file
 │   └── Dockerfile           # Server Dockerfile
 │
-├── compose.yml       # Docker Compose for local development
+├── k8s/                     # Kubernetes configuration files
+│   ├── client-deployment.yaml
+│   ├── client-service.yaml
+│   ├── server-deployment.yaml
+│   ├── server-service.yaml
+│   ├── configmap.yaml
+│   └── namespace.yaml
+│
+├── compose.yml              # Docker Compose for local development
 └── .github/workflows/       # CI/CD workflows
 ```
 
