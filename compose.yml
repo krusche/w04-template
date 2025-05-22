@@ -1,13 +1,52 @@
 services:
+  # Reverse proxy (only for prod)
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/certs:/etc/nginx/certs:ro
+      - /etc/nginx/vhost.d
+      - /usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - nginx-proxy
+    profiles:
+      - reverse-proxy
+
+  nginx-proxy-acme:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    depends_on:
+      - nginx-proxy
+    restart: always
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/acme.sh:/etc/acme.sh
+    networks:
+      - nginx-proxy
+    profiles:
+      - reverse-proxy
+
   server:
     image: ghcr.io/aet-devops25/w04-template/server:latest
     build:
       context: ./server
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "${SERVER_PORT:-8080}:8080"     # Expose for local dev
+    expose:
+      - "8080"                          # For reverse proxy in prod
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+      - VIRTUAL_HOST=${SERVER_HOST:-localhost}
+      - LETSENCRYPT_HOST=${SERVER_HOST:-localhost}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-dev@localhost}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
@@ -15,6 +54,8 @@ services:
       retries: 3
       start_period: 40s
     restart: unless-stopped
+    networks:
+      - nginx-proxy
 
   client:
     image: ghcr.io/aet-devops25/w04-template/client:latest
@@ -22,9 +63,18 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${CLIENT_PORT:-3000}:3000"
     environment:
       - PUBLIC_API_URL=${PUBLIC_API_URL:-http://localhost:8080}
+      - VIRTUAL_HOST=${CLIENT_HOST:-localhost}
+      - LETSENCRYPT_HOST=${CLIENT_HOST:-localhost}
+      - LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL:-dev@localhost}
     depends_on:
       - server
+    networks:
+      - nginx-proxy
     restart: unless-stopped
+
+networks:
+  nginx-proxy:
+    external: true
